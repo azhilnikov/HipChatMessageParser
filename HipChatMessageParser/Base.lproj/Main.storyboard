@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="9532" systemVersion="15D21" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" initialViewController="BYZ-38-t0r">
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="9530"/>
+    </dependencies>
+    <scenes>
+        <!--View Controller-->
+        <scene sceneID="tne-QT-ifu">
+            <objects>
+                <viewController id="BYZ-38-t0r" customClass="ViewController" customModule="HipChatMessageParser" customModuleProvider="target" sceneMemberID="viewController">
+                    <layoutGuides>
+                        <viewControllerLayoutGuide type="top" id="y3c-jy-aDJ"/>
+                        <viewControllerLayoutGuide type="bottom" id="wfy-db-euE"/>
+                    </layoutGuides>
+                    <view key="view" contentMode="scaleToFill" id="8bC-Xf-vdC">
+                        <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Hip Chat Message Parser" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="VCh-Ma-Uga">
+                                <rect key="frame" x="178" y="27" width="245" height="25"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="245" id="XVg-m8-OJ5"/>
+                                    <constraint firstAttribute="height" constant="25" id="Z75-d8-Tzk"/>
+                                </constraints>
+                                <fontDescription key="fontDescription" name="HelveticaNeue" family="Helvetica Neue" pointSize="20"/>
+                                <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                            <textField opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" placeholder="Type message here" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="kmG-YN-EEm">
+                                <rect key="frame" x="20" y="60" width="510" height="40"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="40" id="OGZ-4d-psh"/>
+                                </constraints>
+                                <fontDescription key="fontDescription" name="HelveticaNeue-Light" family="Helvetica Neue" pointSize="20"/>
+                                <textInputTraits key="textInputTraits" autocorrectionType="no" spellCheckingType="no" keyboardType="numbersAndPunctuation" returnKeyType="done"/>
+                                <connections>
+                                    <outlet property="delegate" destination="BYZ-38-t0r" id="NLr-5X-fIq"/>
+                                </connections>
+                            </textField>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="iKc-nr-qog">
+                                <rect key="frame" x="530" y="60" width="70" height="40"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="70" id="3ae-Mq-wVs"/>
+                                    <constraint firstAttribute="height" constant="40" id="C2h-W5-fdv"/>
+                                </constraints>
+                                <fontDescription key="fontDescription" name="HelveticaNeue-Thin" family="Helvetica Neue" pointSize="20"/>
+                                <state key="normal" title="Clear">
+                                    <color key="titleColor" white="0.0" alpha="1" colorSpace="calibratedWhite"/>
+                                </state>
+                                <connections>
+                                    <action selector="clearButtonTapped:" destination="BYZ-38-t0r" eventType="touchUpInside" id="l2m-ez-dZQ"/>
+                                </connections>
+                            </button>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="" lineBreakMode="tailTruncation" numberOfLines="26" baselineAdjustment="none" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Soy-EA-vvq">
+                                <rect key="frame" x="20" y="108" width="580" height="492"/>
+                                <fontDescription key="fontDescription" name="HelveticaNeue-Thin" family="Helvetica Neue" pointSize="18"/>
+                                <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                        </subviews>
+                        <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
+                        <constraints>
+                            <constraint firstAttribute="trailing" secondItem="iKc-nr-qog" secondAttribute="trailing" id="3Uo-0e-zic"/>
+                            <constraint firstItem="VCh-Ma-Uga" firstAttribute="top" secondItem="y3c-jy-aDJ" secondAttribute="bottom" constant="7" id="60L-q8-gd4"/>
+                            <constraint firstItem="Soy-EA-vvq" firstAttribute="leading" secondItem="8bC-Xf-vdC" secondAttribute="leading" constant="20" id="7ut-2x-OS0"/>
+                            <constraint firstItem="wfy-db-euE" firstAttribute="top" secondItem="Soy-EA-vvq" secondAttribute="bottom" id="8GX-V7-xcz"/>
+                            <constraint firstItem="iKc-nr-qog" firstAttribute="top" secondItem="VCh-Ma-Uga" secondAttribute="bottom" constant="8" id="GjS-Cu-YDy"/>
+                            <constraint firstItem="kmG-YN-EEm" firstAttribute="leading" secondItem="8bC-Xf-vdC" secondAttribute="leading" constant="20" id="IdX-Gf-FXI"/>
+                            <constraint firstItem="VCh-Ma-Uga" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" id="KiA-up-qsY"/>
+                            <constraint firstItem="iKc-nr-qog" firstAttribute="leading" secondItem="kmG-YN-EEm" secondAttribute="trailing" id="QaB-cC-6xF"/>
+                            <constraint firstAttribute="trailing" secondItem="Soy-EA-vvq" secondAttribute="trailing" id="k3O-3d-OIc"/>
+                            <constraint firstItem="kmG-YN-EEm" firstAttribute="top" secondItem="VCh-Ma-Uga" secondAttribute="bottom" constant="8" id="lrG-Zk-5q5"/>
+                            <constraint firstItem="Soy-EA-vvq" firstAttribute="top" secondItem="iKc-nr-qog" secondAttribute="bottom" constant="8" id="p6H-lY-cjd"/>
+                        </constraints>
+                    </view>
+                    <connections>
+                        <outlet property="jsonLabel" destination="Soy-EA-vvq" id="j8f-6U-6FO"/>
+                        <outlet property="messageTextField" destination="kmG-YN-EEm" id="0TF-Wr-Lwa"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="236" y="304"/>
+        </scene>
+    </scenes>
+</document>
