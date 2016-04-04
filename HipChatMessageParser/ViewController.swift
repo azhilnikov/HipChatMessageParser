@@ -42,10 +42,7 @@ class ViewController: UIViewController, UITextFieldDelegate {
         jsonLabel.text = ""
         
         let messageParser = MessageParser(message: textField.text!)
-        if let jsonString = messageParser.jsonString() {
-            // Show result.
-            jsonLabel.text = jsonString
-        }
+        messageParser.jsonString{data in self.jsonLabel.text = data}
         
         // Hide keyboard.
         textField.resignFirstResponder()

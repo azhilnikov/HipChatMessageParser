@@ -8,11 +8,8 @@
 
 import Foundation
 
-private let mentionsSeparator       = "@"
-private let nonWordCharacterSet     = NSCharacterSet(charactersInString:
-    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_").invertedSet
-private let emoticonsOpenSeparator  = "("
-private let emoticonsCloseSeparator = ")"
+private let mentionsRegExPattern    = "(?<=@).*?(?=\\W|$)"
+private let emoticonsRegExPattern   = "(?<=\\().*?(?=\\))"
 private let emoticonsMaximumLength  = 15
 
 private let kMentions               = "mentions"
@@ -33,55 +30,64 @@ class MessageParser: NSObject {
     // Parse the message.
     // Return string in JSON format or nil if nothing has been found.
     
-    func jsonString() -> String? {
-        // Data to be converted into JSON.
-        let messageData = NSMutableDictionary()
+    func jsonString(completion: (data: String?) -> ()) {
+        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), {
         
-        if let mentions = parseMentions() {
-            // Set mentions array.
-            messageData.setValue(mentions, forKey: kMentions)
-        }
-        
-        if let emoticons = parseEmoticons() {
-            // Set emoticons array.
-            messageData.setValue(emoticons, forKey: kEmoticons)
-        }
-        
-        if let urls = parseURLs() {
-            var linksArray = [NSMutableDictionary]()
+            // Data to be converted into JSON.
+            let messageData = NSMutableDictionary()
             
-            for (url, title) in urls {
-                let linksDictionary = NSMutableDictionary()
-                linksDictionary.setValue(url, forKey: kURL)
-                linksDictionary.setValue(title, forKey: kTitle)
-                linksArray.append(linksDictionary)
+            if let mentions = self.parseMentions() {
+                // Set mentions array.
+                messageData.setValue(mentions, forKey: kMentions)
             }
             
-            // Set array with URLs and titles.
-            messageData.setValue(linksArray, forKey: kLinks)
-        }
-        
-        // Create JSON object if there is some data.
-        if messageData.count > 0 {
-            do {
-                // Create JSON object.
-                let jsonData = try NSJSONSerialization
-                    .dataWithJSONObject(messageData, options: .PrettyPrinted)
+            if let emoticons = self.parseEmoticons() {
+                // Set emoticons array.
+                messageData.setValue(emoticons, forKey: kEmoticons)
+            }
+            
+            if let urls = self.parseURLs() {
+                var linksArray = [NSMutableDictionary]()
                 
+                for (url, title) in urls {
+                    let linksDictionary = NSMutableDictionary()
+                    linksDictionary.setValue(url, forKey: kURL)
+                    linksDictionary.setValue(title, forKey: kTitle)
+                    linksArray.append(linksDictionary)
+                }
+                
+                // Set array with URLs and titles.
+                messageData.setValue(linksArray, forKey: kLinks)
+            }
+            
+            // Create JSON object if there is some data.
+            if messageData.count > 0 {
+                    // Create JSON object.
+                guard let jsonData = try? NSJSONSerialization.dataWithJSONObject(messageData,
+                                                                                 options: .PrettyPrinted)
+                else {
+                    dispatch_async(dispatch_get_main_queue(), {
+                        completion(data: nil)
+                    })
+                    return
+                }
+                    
                 // Convert JSON into string.
                 if let jsonString = String(data: jsonData, encoding: NSUTF8StringEncoding) {
                     // NSJSONSerialization converts "/" into "\/". Fix it.
                     let fixedJSONString = jsonString
                         .stringByReplacingOccurrencesOfString("\\/", withString: "/")
-                    return fixedJSONString
+                    dispatch_async(dispatch_get_main_queue(), {
+                        completion(data: fixedJSONString)
+                    })
+                    return
                 }
             }
-            catch let jsonError as NSError {
-                print("JSON error: " + "\(jsonError.localizedDescription)")
-            }
-        }
-        
-        return nil
+            dispatch_async(dispatch_get_main_queue(), {
+                completion(data: nil)
+            })
+            return
+        })
     }
 
     // MARK: - Private methods
@@ -92,53 +98,7 @@ class MessageParser: NSObject {
     
     // Made temporary internal to run tests!!!
     /*private*/ func parseMentions() -> [String]? {
-        // Array to store found mentions.
-        var mentionsArray = [String]()
-        var startIndex = message.startIndex
-        
-        // Loop through the message to find mentions
-        while startIndex < message.endIndex {
-            
-            // Find a substring starting with "@"
-            guard let startRange = message.rangeOfString(mentionsSeparator,
-                options: .LiteralSearch,
-                range: startIndex..<message.endIndex,
-                locale: nil)
-            else {
-                // There is no a substring starting with "@". Stop search.
-                break
-            }
-            
-            // Move index to the character following "@"
-            startIndex = startRange.endIndex
-            
-            // Find first a non-word character from the current index to the end
-            // of the message.
-            guard let endRange = message.rangeOfCharacterFromSet(nonWordCharacterSet,
-                options: .LiteralSearch,
-                range: startIndex..<message.endIndex)
-            else {
-                // There is no a non-word character in the rest of the message.
-                // Assume the rest of the message is a "mention".
-                // Add it to the array and stop search.
-                let mention = message.substringFromIndex(startIndex)
-                mentionsArray.append(mention)
-                break
-            }
-            
-            // Found a non-word character.
-            // Extract a subscting from start index to the index pointing to the
-            // non-word character. It is a "mention". Add it to the array.
-            // Update start index and continue searching.
-            if startIndex != endRange.startIndex {
-                let mention = message.substringWithRange(startIndex..<endRange.startIndex)
-                mentionsArray.append(mention)
-            }
-            startIndex = endRange.startIndex
-        }
-        
-        // Return nil if mentions have not been found or array with mentions otherwise.
-        return mentionsArray.isEmpty ? nil : mentionsArray
+        return matchesWithPattern(mentionsRegExPattern)
     }
     
     // Search for emoticons in the message.
@@ -147,51 +107,11 @@ class MessageParser: NSObject {
     
     // Made temporary internal to run tests!!!
     /*private*/ func parseEmoticons() -> [String]? {
-        // Array to store found emoticons.
-        var emoticonsArray = [String]()
-        var startIndex = message.startIndex
-        
-        // Loop through the message to find emoticons
-        while startIndex < message.endIndex {
-            
-            // Find "(" starting from the current index to the end of the message.
-            guard let startRange = message.rangeOfString(emoticonsOpenSeparator,
-                options: .LiteralSearch,
-                range: startIndex..<message.endIndex,
-                locale: nil)
-            else {
-                // There is no "(" in the rest of the message. Stop search.
-                break
-            }
-            
-            // Found "(". Move index to the next character.
-            startIndex = startRange.endIndex
-            
-            // Find ")" starting from the current index to the end of the message.
-            guard let endRange = message.rangeOfString(emoticonsCloseSeparator,
-                options: .LiteralSearch,
-                range: startIndex..<message.endIndex,
-                locale: nil)
-            else {
-                // There is no ")" in the rest of the message. Stop search.
-                break
-            }
-            
-            // Found ")". Check the substring length between "(" and ")".
-            let emoticonLength = startIndex.distanceTo(endRange.startIndex)
-            if (1...emoticonsMaximumLength).contains(emoticonLength) {
-                // Length is correct. Extract a substring. It's an emoticon.
-                // Add it to the array.
-                let emoticon = message.substringWithRange(startIndex..<endRange.startIndex)
-                emoticonsArray.append(emoticon)
-            }
-            
-            // Update start index and continue search.
-            startIndex = endRange.endIndex
+        if let matches = self.matchesWithPattern(emoticonsRegExPattern)
+            where !matches.isEmpty {
+            return  matches.filter{$0.characters.count <= emoticonsMaximumLength}
         }
-        
-        // Return nil if emoticons have not been found or array with emoticons otherwise.
-        return emoticonsArray.isEmpty ? nil : emoticonsArray
+        return nil
     }
     
     // Search for URLs in the message.
@@ -210,14 +130,14 @@ class MessageParser: NSObject {
         
         // Find all URLs in the message.
         let links = linkDetector.matchesInString(message,
-            options: [],
-            range: NSMakeRange(0, message.characters.count))
+                                                 options: [],
+                                                 range: NSMakeRange(0, message.characters.count))
         
         for link in links {
             // String containing URL.
             var urlString = (message as NSString).substringWithRange(link.range)
             
-            // Maybe it is unnecessary because URL must starts with "http(s)://"
+            // Maybe it is unnecessary because URL must start with "http(s)://"
             if !urlString.hasPrefix("http") {
                 // Add mandatory prefix
                 urlString = "https://" + urlString
@@ -237,11 +157,34 @@ class MessageParser: NSObject {
                     let title = html.substringWithRange(startRange.endIndex..<endRange.startIndex)
                     // Store title in the dictionary.
                     urlTitleDictionary[urlString] = title
-                }
+            }
         }
-        
+
         // Return nil if no links have been found or
         // dictionary with URLs and titles otherwise.
         return urlTitleDictionary.isEmpty ? nil : urlTitleDictionary
+    }
+    
+    // Search for matches in the message using given pattern.
+    // Return Array<String> containing all matches found in the message or nil
+    // if no matches have been found.
+    
+    private func matchesWithPattern(pattern: String) -> [String]? {
+        // Create a regular expression
+        guard let regex = try? NSRegularExpression(pattern: pattern,
+                                                   options: .CaseInsensitive)
+        else {
+            // Wrong regular expression
+            return nil
+        }
+        
+        // Find all matches in the message
+        let matches = regex.matchesInString(message,
+                                            options: [],
+                                            range: NSMakeRange(0, message.characters.count))
+        
+        return matches.isEmpty ? nil : matches.map{
+            (self.message as NSString).substringWithRange($0.range)
+        }
     }
 }
